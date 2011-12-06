@@ -22,7 +22,7 @@ def extract_file(infilename)
     row[0] = row[0].to_s.strip
     
     the_date = Date.strptime(row[0], "%m/%d/%Y")
-    the_time = row[0].split[1]
+    the_time = row[0].split[1] || "0:00"
     
     if (current_date != the_date)
         current_date = the_date
