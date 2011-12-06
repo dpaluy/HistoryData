@@ -1,0 +1,58 @@
+#!/usr/bin/env ruby
+
+# make Daily files from big csv file
+require 'fileutils'
+require 'csv'
+require 'date'
+
+def extract_file(infilename)
+  dirname = infilename.gsub('.csv','')
+  if File.directory? dirname
+    puts "The folder #{dirname} is already exists. Please delete/rename this folder before start!"
+    exit
+  else
+    FileUtils.mkdir dirname
+  end
+  outfile = nil
+  current_date = nil
+  
+  
+  CSV.read(infilename).reject {|x| x.first.nil? }.each_with_index do |row, i|
+    next if i == 0 # skip headers
+    row[0] = row[0].to_s.strip
+    
+    the_date = Date.strptime(row[0], "%m/%d/%Y")
+    the_time = row[0].split[1]
+    
+    if (current_date != the_date)
+        current_date = the_date
+        if !outfile.nil?
+          outfile.close
+        end
+        # open new file for writing
+        d = the_date.strftime("%Y%m%d") 
+        outfilename = "#{infilename.gsub('.csv','')}/#{d}_#{File.basename(infilename).gsub('.csv','')}.csv"
+        outfile = File.open(outfilename,'w')
+        puts "Open file: #{outfilename}"
+      end
+      # write line to the file
+      outfile.puts "#{the_time},#{row[1]}"
+  end
+end
+
+##############
+#    MAIN    #
+##############
+if ARGV.length() < 1
+  puts "Usage: " + __FILE__ + " filename/folder"
+  exit
+end
+
+if File.directory?(ARGV[0])
+  path = "#{ARGV[0].chomp('/')}/**/*.csv"
+  filelist = Dir[path].sort
+  filelist.each {|f| extract_file(f) }
+else
+  extract_file(ARGV[0])
+end
+
