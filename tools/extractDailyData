@@ -4,6 +4,20 @@
 require 'fileutils'
 require 'csv'
 require 'date'
+require 'time'
+
+@start_time = Time.parse("10:00")
+@end_time = Time.parse("16:00")
+
+def include?(the_time)
+  current = Time.parse(the_time)
+  
+  if current >= @start_time && current <= @end_time
+    return true
+  else
+    return false
+  end
+end
 
 def extract_file(infilename)
   dirname = infilename.gsub('.csv','')
@@ -23,6 +37,8 @@ def extract_file(infilename)
     
     the_date = Date.strptime(row[0], "%m/%d/%Y")
     the_time = row[0].split[1] || "0:00"
+
+    next unless include?(the_time)
     
     if (current_date != the_date)
         current_date = the_date
