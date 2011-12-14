@@ -6,7 +6,7 @@ require 'csv'
 require 'date'
 require 'time'
 
-@start_time = Time.parse("10:00")
+@start_time = Time.parse("10:20")
 @end_time = Time.parse("16:00")
 
 def include?(the_time)
