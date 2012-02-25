@@ -19,17 +19,38 @@ def include?(the_time)
   end
 end
 
+def fill_time_range(filename)
+  first_line = %x[ head -n 1 #{filename} ]
+  last_line = %x[ tail -n 1 #{filename} ]
+  raise "Bad File #{filename}" if first_line.empty? || last_line.empty?
+    
+  ftime, fvalue = first_line.strip.split(',') 
+  ltime, lvalue = last_line.strip.split(',') 
+  new_first_line = (Time.parse(ftime) > @start_time) ? "#{@start_time.strftime('%H:%M')}, #{fvalue}" : nil
+  new_last_line = (Time.parse(ltime) < @end_time) ? "#{@end_time.strftime('%H:%M')}, #{lvalue}" : nil
+  
+  unless new_first_line.nil? && new_last_line.nil?
+    puts "Fill time in #{filename}"
+    File.open(filename, 'r+') do |f|
+      lines = f.readlines
+      new_lines = ([new_first_line].concat(lines).concat([new_last_line])).compact
+      f.pos = 0
+      f.puts new_lines
+    end  
+  end
+end
+
 def extract_file(infilename)
-  dirname = infilename.gsub('.csv','')
-  if File.directory? dirname
+  @dirname = infilename.gsub('.csv','')
+  if File.directory? @dirname
     puts "The folder #{dirname} is already exists. Please delete/rename this folder before start!"
     exit
   else
-    FileUtils.mkdir dirname
+    FileUtils.mkdir @dirname
   end
   outfile = nil
   current_date = nil
-  
+  outfilename = nil
   
   CSV.read(infilename).reject {|x| x.first.nil? }.each_with_index do |row, i|
     next if i == 0 # skip headers
@@ -44,6 +65,7 @@ def extract_file(infilename)
         current_date = the_date
         if !outfile.nil?
           outfile.close
+          fill_time_range(outfilename)
         end
         # open new file for writing
         d = the_date.strftime("%Y%m%d") 
